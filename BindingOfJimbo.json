@@ -1,0 +1,14 @@
+{
+	"id": "binding_of_jimbo",
+	"name": "The Binding of Jimbo",
+	"display_name": "TheBindingOfJimbo",
+	"author": ["jdettorreUC"],
+	"description": "A Balatro mod with elements from The Binding of Isaac.",
+	"prefix": "binding_of_jimbo",
+	"main_file": "main.lua",
+	"priority": 0,
+	"badge_colour": "dbd5ce",
+	"badge_text_colour": "000000",
+	"version": "0.0.1",
+	"dependencies": ["Steamodded (>>1.0.0~ALPHA-0711a)"]
+}
