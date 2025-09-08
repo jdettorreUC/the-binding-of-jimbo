@@ -13,7 +13,92 @@ SMODS.Atlas{
 
 --The Empress? -
 
---The Emperor? - Reroll the Boss Blind
+--The Emperor? - Changes next non-boss blind into a boss blind, gives the investment tag
+
+SMODS.Consumable {
+    key = 'reverse_emperor',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 5, y = 2},
+
+        loc_txt = {
+        name = 'The Emperor?',
+        text = {
+            [1] = 'Rerolls upcoming {C:attention}Non-Boss Blind',
+            [2] = 'into a random {C:attention}Boss Blind{} and',
+            [3] = 'creates a free {C:attention}Investment Tag'
+        }
+    },
+
+    config = { extra = { max = -20 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.max } }
+    end,
+
+    can_use = function(self, card)
+        --maybe fix this later? i don't know how to check this with a flag otherwise
+        if G.GAME.tags then
+            for i = 1, #G.GAME.tags do
+                if (G.GAME.tags[i]).key == "tag_investment" then
+                    return false
+                end
+            end
+        end
+        return G.GAME.blind_on_deck ~= "Boss" and not G.GAME.blind.in_blind and G.STATE ~= G.STATES.SHOP
+    end,
+
+    use = function(self, card, area, copier)
+        if G.GAME.blind_on_deck == "Small" then
+            local par = G.blind_select_opts.small.parent
+            G.GAME.round_resets.blind_choices.Small = get_new_boss()
+            G.blind_select_opts.small:remove()
+            G.blind_select_opts.small = UIBox{
+            T = {par.T.x, 0, 0, 0, },
+            definition =
+                {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
+                UIBox_dyn_container({create_UIBox_blind_choice('Small')},false,get_blind_main_colour('Small'), mix_colours(G.C.BLACK, get_blind_main_colour('Small'), 0.8))
+                }},
+            config = {align="bmi",
+                        offset = {x=0,y=G.ROOM.T.y + 9},
+                        major = par,
+                        xy_bond = 'Weak'
+                    }
+            }
+
+            par.config.object = G.blind_select_opts.small
+            par.config.object:recalculate()
+            G.blind_select_opts.small.parent = par
+            G.blind_select_opts.small.alignment.offset.y = 0
+
+        else
+            local par = G.blind_select_opts.big.parent
+            G.GAME.round_resets.blind_choices.Big = get_new_boss()
+            G.blind_select_opts.big:remove()
+            G.blind_select_opts.big = UIBox{
+            T = {par.T.x, 0, 0, 0, },
+            definition =
+                {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
+                UIBox_dyn_container({create_UIBox_blind_choice('Big')},false,get_blind_main_colour('Big'), mix_colours(G.C.BLACK, get_blind_main_colour('Big'), 0.8))
+                }},
+            config = {align="bmi",
+                        offset = {x=0,y=G.ROOM.T.y + 9},
+                        major = par,
+                        xy_bond = 'Weak'
+                    }
+            }
+
+            par.config.object = G.blind_select_opts.big
+            par.config.object:recalculate()
+            G.blind_select_opts.big.parent = par
+            G.blind_select_opts.big.alignment.offset.y = 0
+        end
+        add_tag(Tag('tag_investment'))
+        return true
+    end,
+}
 
 --The Hierophant? - Enhances 2 selected cards into Bone Cards
 
@@ -158,6 +243,54 @@ SMODS.Consumable {
 }
 
 --The Hanged Man? - Adds 2 random cards to hand
+
+SMODS.Consumable {
+    key = 'reverse_hanged_man',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 7, y = 1},
+
+        loc_txt = {
+        name = 'The Hanged Man?',
+        text = {
+            [1] = 'Creates {C:attention}2{} random',
+            [2] = '{C:attention}Playing cards{} and',
+            [3] = 'adds them to your hand',
+        }
+    },
+
+    config = { extra = {cards = 2} },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.cards } }
+    end,
+
+    can_use = function(self, card)
+        return #G.hand.cards ~= 0
+    end,
+
+    use = function(self, card, area, copier)
+        for i = 1, card.ability.extra.cards do
+            --function poll_edition(_key, _mod, _no_neg, _guaranteed, _options) end
+            local rand_edition = poll_edition("tboj_reverse_hanged_man", 2, true)
+            --table|{key?: string, mod?: number, guaranteed?: boolean, options?: table, type_key?: string}
+            local rand_seal = SMODS.poll_seal("tboj_reverse_hanged_man", 10)
+            local new_card = SMODS.add_card {
+                set = "Playing Card",
+                edition = rand_edition,
+                seal = rand_seal
+            }
+            -- adds to deck view
+            new_card:add_to_deck()
+            -- updates deck size
+            G.deck.config.card_limit = G.deck.config.card_limit + 1
+        end
+        return true
+    end,
+
+}
 
 --Death? - Select 1 card, remove its enhancements and gain the corresponding consumables
 
