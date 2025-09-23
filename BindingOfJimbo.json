@@ -4,7 +4,7 @@
 	"display_name": "TheBindingOfJimbo",
 	"author": ["jdettorreUC"],
 	"description": "A Balatro mod with elements from The Binding of Isaac.",
-	"prefix": "binding_of_jimbo",
+	"prefix": "tboj",
 	"main_file": "main.lua",
 	"priority": 0,
 	"badge_colour": "dbd5ce",
