@@ -44,7 +44,34 @@ SMODS.Enhancement {
     end,
 }
 
---Soiled (for poop related items) - +10 mult when scored, -10 mult when in hand (doesn’t have to be this specific effect, just want it to be good when scored, bad when in hand)
+--Soiled (for poop related items) - 1 in 2 chance to earn $2 when discarded
+SMODS.Enhancement {
+    key = 'soiled',
+    atlas = 'TBOJ_enhancements',
+    pos = {x = 2, y = 1},
+
+    config = {extra = { discard_dollars = 3, odds = 2} },
+    loc_vars = function(self, info_queue, card)
+        local numerator, denominator = SMODS.get_probability_vars(card, 1, card.ability.extra.odds, 'tboj_soiled')
+        return { vars = { card.ability.extra.discard_dollars, numerator, denominator } }
+    end,
+
+    loc_txt = {
+        name = 'Soiled Card',
+        text = {
+            [1] = '{C:green}#2# in #3#{} chance to',
+            [2] = 'earn {C:money}$#1#{} when discarded',
+        }
+    },
+
+    calculate = function(self, card, context)
+        if context.discard and context.other_card == card then
+            if SMODS.pseudorandom_probability(card, 'tboj_soiled', 1, card.ability.extra.odds) then
+                return {dollars = card.ability.extra.discard_dollars}
+            end
+        end
+    end,
+}
 
 --Charged (for battery related items) - Card increases rank after scoring, permanently gains x0.25 mult when “fully charged” (Ace into 2)
 SMODS.Enhancement {
@@ -216,3 +243,5 @@ SMODS.Enhancement {
         end
     end,
 }
+
+--Haunted - +1 Hand Size, x0.95 mult when held in hand

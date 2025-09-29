@@ -7,11 +7,135 @@ SMODS.Atlas{
 
 --The Fool? - Creates a reverse copy of the last used Tarot card (The Fool/The Fool? excluded)
 
---The Magician? -
+--The Magician? - Discards 3 random cards in hand without spending a Discard
+SMODS.Consumable {
+    key = 'reverse_magician',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 8, y = 2},
 
---The High Priestess? - Decrease the most played hand by 1 level, increase 3 other hands by 1 level
+    config = { extra = { discards = 3 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.discards } }
+    end,
 
---The Empress? -
+    loc_txt = {
+        name = 'The Magician?',
+        text = {
+            [1] = 'Discards {C:attention}#1#{} random cards in hand',
+            [2] = 'without spending a {C:attention}Discard',
+        }
+    },
+
+    can_use = function(self, card)
+        if G.hand.cards then
+            return (#G.hand.cards > 0)
+        end
+    end,
+
+    use = function(self, card, area, copier)
+        local not_selected = {}
+        local numb_discarded = 0
+        for _, playing_card in ipairs(G.hand.cards) do
+            not_selected[#not_selected + 1] = playing_card
+        end
+        for i = 1, 3 do
+            if G.hand.cards[i] then
+                local selected_card, card_index = pseudorandom_element(not_selected, 'tboj_reverse_magician')
+                G.hand:add_to_highlighted(selected_card, true)
+                table.remove(not_selected, card_index)
+                numb_discarded = numb_discarded + 1
+                play_sound('card1', 1)
+            end
+        end
+
+        G.FUNCS.discard_cards_from_highlighted(nil, true)
+        SMODS.draw_cards(numb_discarded)
+
+        if G.STATE == G.STATES.SMODS_BOOSTER_OPENED then
+            G.FUNCS.draw_from_discard_to_deck()
+        end
+
+        return true
+    end,
+
+}
+
+--The High Priestess? - Decrease the highest leveled hand by 2 levels, create a Negative copy of the corresponding Planet Card
+SMODS.Consumable {
+    key = 'reverse_high_priestess',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 7, y = 2},
+
+    config = { extra = { level_decrease = 2 } },
+    loc_vars = function(self, info_queue, card)
+        local decreased_hand = "n/a"
+
+        if G.GAME.hands then
+            local max_level = 3
+            for k, v in pairs(G.GAME.hands) do
+                if G.GAME.hands[k].level >= max_level then
+                    max_level = G.GAME.hands[k].level
+                    decreased_hand = k
+                end
+            end
+        end
+
+        return { vars = { card.ability.extra.level_decrease, decreased_hand } }
+    end,
+
+    loc_txt = {
+        name = 'The High Priestess?',
+        text = {
+            [1] = 'Decreases the highest leveled hand by',
+            [2] = '{C:attention}#1#{} levels and creates a {C:dark_edition}Negative{} copy of',
+            [3] = 'the corresponding {C:planet}Planet{} card',
+            [4] = '{C:inactive}(Currently: {C:attention}#2#{C:inactive})'
+        }
+    },
+
+    can_use = function(self, card)
+        if G.GAME.hands then
+            for k, v in pairs(G.GAME.hands) do
+                if G.GAME.hands[k].level >= 3 then
+                    return true
+                end
+            end
+        end
+    end,
+
+    use = function(self, card, area, copier)
+        local decreased_hand = "n/a"
+        if G.GAME.hands then
+            local max_level = 3
+            for k, v in pairs(G.GAME.hands) do
+                if G.GAME.hands[k].level >= max_level then
+                    max_level = G.GAME.hands[k].level
+                    decreased_hand = k
+                end
+            end
+        end
+        
+        for k, v in pairs(G.P_CENTER_POOLS.Planet) do
+            if v.config.hand_type == decreased_hand then
+                SMODS.smart_level_up_hand(card, decreased_hand, nil, (0 - card.ability.extra.level_decrease))
+                SMODS.add_card {set = "Planet", key = G.P_CENTER_POOLS.Planet[k].key, edition = "e_negative"}
+                return true
+            end
+        end
+    end,
+
+}
+
+
+--The Empress? - 
 
 --The Emperor? - Changes next non-boss blind into a boss blind, gives the investment tag
 
@@ -33,9 +157,8 @@ SMODS.Consumable {
         }
     },
 
-    config = { extra = { max = -20 } },
     loc_vars = function(self, info_queue, card)
-        return { vars = { card.ability.extra.max } }
+        info_queue[#info_queue + 1] = { key = 'tag_investment', set = 'Tag', specific_vars = { 25 } }
     end,
 
     can_use = function(self, card)
@@ -177,7 +300,7 @@ SMODS.Consumable {
 
 --The Chariot? -
 
---Justice? -
+--Justice? - Creates a copy of the last destroyed card?
 
 --The Hermit? - Halves money (max of $20), gives a Coupon Tag and D6 Tag
 SMODS.Consumable {
@@ -200,6 +323,8 @@ SMODS.Consumable {
 
     config = { extra = { max = -20 } },
     loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue + 1] = { key = 'tag_coupon', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_d_six', set = 'Tag' }
         return { vars = { card.ability.extra.max } }
     end,
 
@@ -393,7 +518,7 @@ SMODS.Consumable {
         if G.hand and #G.hand.highlighted > 0 and #G.hand.highlighted <= card.ability.max_highlighted then
             for i = 1, #G.hand.highlighted do
                 local card = G.hand.highlighted[i]
-                --need to do next because base counts as an enhancement
+                --need to do next because base counts as an enhancement...?
                 if next(SMODS.get_enhancements(card)) or card.edition or card.seal then
                     return true
                 end
@@ -729,7 +854,70 @@ SMODS.Consumable {
 
 }
 
---Judgement? - Destroy leftmost Joker and create a Joker of equal rarity or higher (Cannot create a Legendary Joker)
+--Judgement? - Destroy the leftmost Joker and create a random non-Negative Joker tag
+SMODS.Consumable {
+    key = 'reverse_judgement',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 9, y = 0},
+
+    --currently unused variables, but may use them if i decide gilded consumables are a thing
+    config = { extra = {tags_created = 1, jokers_destroyed = 1} },
+    loc_txt = {
+        name = 'Judgement?',
+        text = {
+            [1] = 'Destroy a random {C:attention}Joker{} and create',
+            [2] = 'a random non-Negative {C:attention}Joker tag',
+        }
+    },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue + 1] = { key = 'tag_uncommon', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_rare', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_foil', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_holo', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_polychrome', set = 'Tag' }
+        info_queue[#info_queue + 1] = { key = 'tag_top_up', set = 'Tag', specific_vars = { 2 } }
+        --need to localize top-up or else the value will be nil
+        return { vars = { card.ability.tags_created, card.ability.jokers_destroyed } }
+    end,
+
+    can_use = function(self, card)
+        if G.jokers and #G.jokers.cards > 0 then
+            for k, v in pairs (G.jokers.cards) do
+                if not G.jokers.cards[k].ability.eternal then
+                    return true
+                end
+            end
+        end
+    end,
+
+    use = function(self, card, area, copier)
+        local destroyable_jokers = {}
+        local eligable_tags = {
+            [1] = 'tag_uncommon',
+            [2] = 'tag_rare',
+            [3] = 'tag_foil',
+            [4] = 'tag_holo',
+            [5] = 'tag_polychrome',
+            [6] = 'tag_top_up'
+        }
+            for k, v in pairs (G.jokers.cards) do
+                if not G.jokers.cards[k].ability.eternal then
+                    destroyable_jokers[k] = k
+                end
+            end
+        
+        SMODS.destroy_cards(G.jokers.cards[pseudorandom_element(destroyable_jokers, 'tboj_reverse_judgement')])
+        add_tag(Tag(pseudorandom_element(eligable_tags, 'tboj_reverse_judgement')))
+        return true
+    end,
+
+}
+
 
 --The World? - Convert up to 3 selected Spades into a random non-Spade suit
 
