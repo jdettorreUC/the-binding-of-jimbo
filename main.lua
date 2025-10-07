@@ -5,6 +5,7 @@ SMODS.current_mod.optional_features = {
     }
 }
 
+assert(SMODS.load_file('hooks_and_helpers.lua'))()
 assert(SMODS.load_file('content/enhancements.lua'))()
 assert(SMODS.load_file('content/jokers/page1.lua'))()
 assert(SMODS.load_file('content/consumables/reverse_tarots.lua'))()

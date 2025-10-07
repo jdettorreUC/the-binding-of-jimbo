@@ -6,6 +6,141 @@ SMODS.Atlas{
 }
 
 --The Fool? - Creates a reverse copy of the last used Tarot card (The Fool/The Fool? excluded)
+SMODS.Consumable {
+    key = 'reverse_fool',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 9, y = 2},
+
+    loc_vars = function(self, info_queue, card)
+        local reverse_fool_c = G.GAME.tboj_last_tarot and G.P_CENTERS[G.GAME.tboj_last_tarot] or nil
+        local reversal = nil
+        local last_tarot = reverse_fool_c and localize { type = 'name_text', key = reverse_fool_c.key, set = reverse_fool_c.set } or
+            localize('k_none')
+        local colour = (not reverse_fool_c or reverse_fool_c.name == 'The Fool' or reverse_fool_c.key == 'c_tboj_reverse_fool') and G.C.RED or G.C.GREEN
+        
+        local reverse_table = {
+            ['c_magician'] = 'c_tboj_reverse_magician',
+            ['c_high_priestess'] = 'c_tboj_reverse_high_priestess',
+            ['c_empress'] = 'c_tboj_reverse_empress',
+            ['c_emperor'] = 'c_tboj_reverse_emperor',
+            ['c_heirophant'] = 'c_tboj_reverse_hierophant',
+            ['c_lovers'] = 'c_tboj_reverse_lovers',
+            ['c_chariot'] = 'c_tboj_reverse_chariot',
+            ['c_justice'] = 'c_tboj_reverse_justice',
+            ['c_hermit'] = 'c_tboj_reverse_hermit',
+            ['c_wheel_of_fortune'] = 'c_tboj_reverse_wheel',
+            ['c_strength'] = 'c_tboj_reverse_strength',
+            ['c_hanged_man'] = 'c_tboj_reverse_hanged_man',
+            ['c_death'] = 'c_tboj_reverse_death',
+            ['c_temperance'] = 'c_tboj_reverse_temperance',
+            ['c_devil'] = 'c_tboj_reverse_devil',
+            ['c_tower'] = 'c_tboj_reverse_tower',
+            ['c_star'] = 'c_tboj_reverse_star',
+            ['c_moon'] = 'c_tboj_reverse_moon',
+            ['c_sun'] = 'c_tboj_reverse_sun',
+            ['c_judgement'] = 'c_tboj_reverse_judgement',
+            ['c_world'] = 'c_tboj_reverse_world',
+        }
+
+        if not (not reverse_fool_c or reverse_fool_c.name == 'The Fool' or reverse_fool_c.key == 'c_tboj_reverse_fool') then
+            local reversal_key = nil
+            for k, v in pairs(reverse_table) do
+                if reverse_fool_c.key == k then
+                reversal_key = v
+                elseif reverse_fool_c.key == v then
+                reversal_key = k
+                end
+            end
+            reversal = G.P_CENTERS[reversal_key]
+            info_queue[#info_queue + 1] = reversal
+        end
+
+        local main_end = {
+            {
+                n = G.UIT.C,
+                config = { align = "bm", padding = 0.02 },
+                nodes = {
+                    {
+                        n = G.UIT.C,
+                        config = { align = "m", colour = colour, r = 0.05, padding = 0.05 },
+                        nodes = {
+                            { n = G.UIT.T, config = { text = ' ' .. last_tarot .. ' ', colour = G.C.UI.TEXT_LIGHT, scale = 0.3, shadow = true } },
+                        }
+                    }
+                }
+            }
+        }
+
+        return { vars = { reversal }, main_end = main_end }
+    end,
+
+    loc_txt = {
+        name = 'The Fool?',
+        text = {
+            [1] = 'Creates a {C:attention}reverse{} copy of',
+            [2] = 'the last {C:tarot}Tarot{} card',
+            [3] = 'used during this run',
+            [4] = '{s:0.8,C:tarot}The Fool{s:0.8}/{s:0.8,C:tarot}The Fool? {s:0.8}excluded'
+        }
+    },
+
+    can_use = function(self, card)
+        return (#G.consumeables.cards < G.consumeables.config.card_limit or card.area == G.consumeables) and
+            G.GAME.tboj_last_tarot and
+            G.GAME.tboj_last_tarot ~= 'c_fool' and
+            G.GAME.tboj_last_tarot ~= 'c_tboj_reverse_fool'
+    end,
+
+    use = function(self, card, area, copier)
+        local reverse_table = {
+            ['c_magician'] = 'c_tboj_reverse_magician',
+            ['c_high_priestess'] = 'c_tboj_reverse_high_priestess',
+            ['c_empress'] = 'c_tboj_reverse_empress',
+            ['c_emperor'] = 'c_tboj_reverse_emperor',
+            ['c_heirophant'] = 'c_tboj_reverse_hierophant',
+            ['c_lovers'] = 'c_tboj_reverse_lovers',
+            ['c_chariot'] = 'c_tboj_reverse_chariot',
+            ['c_justice'] = 'c_tboj_reverse_justice',
+            ['c_hermit'] = 'c_tboj_reverse_hermit',
+            ['c_wheel_of_fortune'] = 'c_tboj_reverse_wheel',
+            ['c_strength'] = 'c_tboj_reverse_strength',
+            ['c_hanged_man'] = 'c_tboj_reverse_hanged_man',
+            ['c_death'] = 'c_tboj_reverse_death',
+            ['c_temperance'] = 'c_tboj_reverse_temperance',
+            ['c_devil'] = 'c_tboj_reverse_devil',
+            ['c_tower'] = 'c_tboj_reverse_tower',
+            ['c_star'] = 'c_tboj_reverse_star',
+            ['c_moon'] = 'c_tboj_reverse_moon',
+            ['c_sun'] = 'c_tboj_reverse_sun',
+            ['c_judgement'] = 'c_tboj_reverse_judgement',
+            ['c_world'] = 'c_tboj_reverse_world',
+        }
+
+        local reversal = nil
+
+        for k, v in pairs(reverse_table) do
+            if G.GAME.tboj_last_tarot == k then
+                reversal = v
+                break
+            elseif G.GAME.tboj_last_tarot == v then
+                reversal = k
+                break
+            end
+        end
+
+        if G.consumeables.config.card_limit > #G.consumeables.cards then
+            play_sound('timpani')
+            SMODS.add_card({ key = reversal })
+            card:juice_up(0.3, 0.5)
+        end
+        return true
+    end,
+
+}
 
 --The Magician? - Discards 3 random cards in hand without spending a Discard
 SMODS.Consumable {
@@ -135,7 +270,46 @@ SMODS.Consumable {
 }
 
 
---The Empress? - 
+--The Empress? - Debuffs 2 selected cards in hand then creates a random Spectral card
+SMODS.Consumable {
+    key = 'reverse_empress',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 6, y = 2},
+
+    config = { max_highlighted = 2 },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.max_highlighted } }
+    end,
+
+    loc_txt = {
+        name = 'The Empress?',
+        text = {
+            [1] = 'Debuffs {C:attention}2{} selected cards in hand',
+            [2] = 'then creates a random {C:spectral}Spectral{} card',
+            [3] = '{C:inactive}(Must have room)'
+        }
+    },
+
+    can_use = function(self, card)
+        return G.hand and #G.hand.highlighted > 0 and #G.hand.highlighted == card.ability.max_highlighted
+    end,
+
+    use = function(self, card, area, copier)
+        for _, highlighted_card in pairs(G.hand.highlighted) do
+            SMODS.debuff_card(highlighted_card, true, 'tboj_reverse_empress')
+        end
+
+        if G.consumeables.config.card_limit - #G.consumeables.cards > 0 then
+            SMODS.add_card{set = 'Spectral'}
+        end
+    end,
+
+}
+
 
 --The Emperor? - Changes next non-boss blind into a boss blind, gives the investment tag
 
@@ -298,9 +472,103 @@ SMODS.Consumable {
     end
 }
 
---The Chariot? -
+--The Chariot? - Apply Eternal to a random Joker and apply Perishable to a random Joker
+SMODS.Consumable {
+    key = 'reverse_chariot',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 2, y = 2},
 
---Justice? - Creates a copy of the last destroyed card?
+    loc_txt = {
+        name = 'The Chariot?',
+        text = {
+            [1] = 'Applies {C:attention}Eternal{} to a random Joker',
+            [2] = 'and applies {C:attention}Perishable{} to a random Joker',
+        }
+    },
+
+    config = { extra = { affected_jokers = 2 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.affected_jokers } }
+    end,
+
+    can_use = function(self, card)
+        local eligable_joker_count = 0
+        if G.jokers and #G.jokers.cards > 0 then
+            for k, v in pairs (G.jokers.cards) do
+                if not (G.jokers.cards[k].ability.eternal or G.jokers.cards[k].ability.perishable) then
+                    eligable_joker_count = eligable_joker_count + 1
+                end
+            end
+        end
+        return eligable_joker_count >= card.ability.extra.affected_jokers
+    end,
+
+    use = function(self, card, area, copier)
+            local eligable_jokers = {}
+            for k, v in pairs (G.jokers.cards) do
+                if not (G.jokers.cards[k].ability.eternal or G.jokers.cards[k].ability.perishable) then
+                    eligable_jokers[k] = v
+                end
+            end
+            local perishable_joker, index = pseudorandom_element(eligable_jokers, 'tboj_reverse_chariot')
+            table.remove(eligable_jokers, index)
+            SMODS.Stickers["perishable"]:apply(perishable_joker, true)
+            SMODS.Stickers["eternal"]:apply(pseudorandom_element(eligable_jokers, 'tboj_reverse_chariot'), true)
+        return true
+    end,
+
+}
+
+--Justice? - Creates a copy of the last destroyed card
+SMODS.Consumable {
+    key = 'reverse_justice',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 1, y = 2},
+
+    loc_txt = {
+        name = 'Justice?',
+        text = {
+            [1] = 'Creates a {C:attention}copy{} of',
+            [2] = 'the last {C:attention}destroyed{} card',
+        }
+    },
+
+    --only using this variable if gilded consumables are a thing
+    config = { extra = { copies = 1 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.copies } }
+    end,
+
+    can_use = function(self, card)
+        if G.hand.cards and #G.hand.cards > 0 then
+            return G.GAME.tboj_last_removed_card.set ~= nil and G.GAME.tboj_last_removed_card.rank ~= nil and G.GAME.tboj_last_removed_card.suit ~= nil
+        end
+    end,
+
+    --breaks on restart, not sure why
+    use = function(self, card, area, copier)
+            local new_card = SMODS.add_card {
+                 set = G.GAME.tboj_last_removed_card.set,
+                 rank = G.GAME.tboj_last_removed_card.rank,
+                 suit = G.GAME.tboj_last_removed_card.suit,
+                 enhancement = G.GAME.tboj_last_removed_card.enhancement,
+                 edition = G.GAME.tboj_last_removed_card.edition,
+                 seal = G.GAME.tboj_last_removed_card.seal,
+             }
+            new_card:add_to_deck()
+            G.deck.config.card_limit = G.deck.config.card_limit + 1
+        return true
+    end,
+
+}
 
 --The Hermit? - Halves money (max of $20), gives a Coupon Tag and D6 Tag
 SMODS.Consumable {
@@ -663,7 +931,51 @@ SMODS.Consumable {
 
 }
 
---The Devil? - 
+--The Devil? - Applies Rental to a random Joker and gain a Handy tag or Garbage tag
+SMODS.Consumable {
+    key = 'reverse_devil',
+    set = 'Tarot',
+    atlas = 'reverse_tarots',
+    unlocked = true,
+    discovered = true,
+    cost = 3,
+    pos = {x = 4, y = 1},
+
+    config = { extra = { interest_cap_mod = 5 } },
+    loc_vars = function(self, info_queue, card)
+        return { vars = { card.ability.extra.interest_cap_mod } }
+    end,
+
+    loc_txt = {
+        name = 'The Devil?',
+        text = {
+            [1] = 'Applies {C:attention}Rental{} to a random Joker',
+            [2] = 'then increases interest cap by {C:money}$#1#',
+        }
+    },
+
+    can_use = function(self, card)
+        if G.jokers and #G.jokers.cards > 0 then
+            for k, v in pairs (G.jokers.cards) do
+                if not G.jokers.cards[k].ability.rental then
+                    return true
+                end
+            end
+        end
+    end,
+
+    use = function(self, card, area, copier)
+        local eligable_jokers = {}
+            for k, v in pairs (G.jokers.cards) do
+                if not G.jokers.cards[k].ability.eternal then
+                    eligable_jokers[k] = v
+                end
+            end
+        SMODS.Stickers["rental"]:apply(pseudorandom_element(eligable_jokers, 'tboj_reverse_devil'), true)
+        G.GAME.interest_cap = G.GAME.interest_cap + card.ability.extra.interest_cap_mod
+    end,
+
+}
 
 --The Tower? - Converts 1 selected card into an Explosive Card
 SMODS.Consumable {
@@ -907,11 +1219,11 @@ SMODS.Consumable {
         }
             for k, v in pairs (G.jokers.cards) do
                 if not G.jokers.cards[k].ability.eternal then
-                    destroyable_jokers[k] = k
+                    destroyable_jokers[k] = v
                 end
             end
         
-        SMODS.destroy_cards(G.jokers.cards[pseudorandom_element(destroyable_jokers, 'tboj_reverse_judgement')])
+        SMODS.destroy_cards(pseudorandom_element(destroyable_jokers, 'tboj_reverse_judgement'))
         add_tag(Tag(pseudorandom_element(eligable_tags, 'tboj_reverse_judgement')))
         return true
     end,
