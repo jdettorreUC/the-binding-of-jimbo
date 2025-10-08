@@ -796,47 +796,36 @@ SMODS.Consumable {
 
     -- this needs cleaned up later, i'm just being lazy right now
     use = function(self, card, area, copier)
+        local enhancement_to_consumable = {
+            ["m_mult"] = "c_empress",
+            ["m_lucky"] = "c_magician",
+            ["m_stone"] = "c_tower",
+            ["m_steel"] = "c_chariot",
+            ["m_gold"] = "c_devil",
+            ["m_glass"] = "c_justice",
+            ["m_bonus"] = "c_heirophant",
+            ["m_wild"] = "c_lovers",
+            ["m_tboj_bone"] = "c_tboj_reverse_hierophant",
+            ["m_tboj_bloodied"] = "c_tboj_reverse_lovers",
+            ["m_tboj_explosive"] = "c_tboj_reverse_tower",
+        }
+
+        local seal_to_spectral = {
+            ["Red"] = "c_deja_vu",
+            ["Gold"] = "c_talisman",
+            ["Blue"] = "c_trance",
+            ["Purple"] = "c_medium",
+        }
+
         for i = 1, #G.hand.highlighted do
-            if SMODS.has_enhancement(G.hand.highlighted[i], "m_mult") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_empress")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_lucky") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_magician")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_stone") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_tower")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_steel") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_chariot")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_gold") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_devil")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_glass") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_justice")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_bonus") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_heirophant")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_wild") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_lovers")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_tboj_bone") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_tboj_reverse_hierophant")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif SMODS.has_enhancement(G.hand.highlighted[i], "m_tboj_bloodied") then
-                local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, "c_tboj_reverse_lovers")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
+            for k, v in pairs(enhancement_to_consumable) do
+                if SMODS.has_enhancement(G.hand.highlighted[i], k) then
+                    --keep in mind this will need to change for pill enhancements as it specifies "Tarot"
+                    local card = create_card("Tarot", G.consumeables, nil, nil, nil, nil, v)
+                    card:add_to_deck()
+                    G.consumeables:emplace(card)
+                    break
+                end
             end
         end
 
@@ -849,22 +838,12 @@ SMODS.Consumable {
         end
 
         for i = 1, #G.hand.highlighted do
-            if (G.hand.highlighted[i]).seal == "Red" then
-                local card = create_card("Spectral", G.consumeables, nil, nil, nil, nil, "c_deja_vu")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif (G.hand.highlighted[i]).seal == "Gold" then
-                local card = create_card("Spectral", G.consumeables, nil, nil, nil, nil, "c_talisman")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif (G.hand.highlighted[i]).seal == "Blue" then
-                local card = create_card("Spectral", G.consumeables, nil, nil, nil, nil, "c_trance")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
-            elseif (G.hand.highlighted[i]).seal == "Purple" then
-                local card = create_card("Spectral", G.consumeables, nil, nil, nil, nil, "c_medium")
-                card:add_to_deck()
-                G.consumeables:emplace(card)
+            for k, v in pairs(seal_to_spectral) do
+                if (G.hand.highlighted[i]).seal == k then
+                    local card = create_card("Spectral", G.consumeables, nil, nil, nil, nil, v)
+                    card:add_to_deck()
+                    G.consumeables:emplace(card)
+                end
             end
         end
 
