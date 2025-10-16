@@ -336,19 +336,13 @@ SMODS.Consumable {
     end,
 
     can_use = function(self, card)
-        --maybe fix this later? i don't know how to check this with a flag otherwise
-        if G.GAME.tags then
-            for i = 1, #G.GAME.tags do
-                if (G.GAME.tags[i]).key == "tag_investment" then
-                    return false
-                end
-            end
-        end
-        return G.GAME.blind_on_deck ~= "Boss" and not G.GAME.blind.in_blind and G.STATE ~= G.STATES.SHOP
+        return G.GAME.blind_on_deck ~= "Boss" and not G.GAME.blind.in_blind and G.STATE ~= G.STATES.SHOP and not G.GAME.tboj_reverse_emperor_used
     end,
 
     use = function(self, card, area, copier)
         if G.GAME.blind_on_deck == "Small" then
+
+
             local par = G.blind_select_opts.small.parent
             G.GAME.round_resets.blind_choices.Small = get_new_boss()
             G.blind_select_opts.small:remove()
@@ -370,6 +364,7 @@ SMODS.Consumable {
             G.blind_select_opts.small.parent = par
             G.blind_select_opts.small.alignment.offset.y = 0
 
+            G.GAME.tboj_reverse_emperor_used = true
         else
             local par = G.blind_select_opts.big.parent
             G.GAME.round_resets.blind_choices.Big = get_new_boss()
@@ -391,6 +386,8 @@ SMODS.Consumable {
             par.config.object:recalculate()
             G.blind_select_opts.big.parent = par
             G.blind_select_opts.big.alignment.offset.y = 0
+
+            G.GAME.tboj_reverse_emperor_used = true
         end
         add_tag(Tag('tag_investment'))
         return true

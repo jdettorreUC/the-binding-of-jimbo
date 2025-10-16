@@ -17,6 +17,8 @@ function Game:init_game_object()
     --Last used tarot for Reverse Fool
     ret.tboj_last_tarot = nil
 
+    --Flag for if reverse emperor was used (so investment tags obtained through skips can still be used and you can't use another rev emperor until at least one blind is defeated)
+    ret.tboj_reverse_emperor_used = false
   return ret
 
 end
@@ -51,6 +53,10 @@ function SMODS.calculate_context(context, return_table)
                 G.GAME.tboj_last_tarot = context.consumeable.config.center_key
             end
         end
+    end
+
+    if G.STAGE == G.STAGES.RUN and context.setting_blind and G.GAME.tboj_reverse_emperor_used then
+        G.GAME.tboj_reverse_emperor_used = false
     end
 
     return ret
